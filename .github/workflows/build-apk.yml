@@ -25,11 +25,25 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract project ZIP
+      - name: Find ZIP
+        run: |
+          ZIP_FILE=$(find . -type f -iname '*.zip' -not -path './.git/*' | head -n 1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ZIP file not found in repository"
+            exit 1
+          fi
+          echo "ZIP_FILE=$ZIP_FILE"
+          echo "ZIP_FILE=$ZIP_FILE" >> $GITHUB_ENV
+
+      - name: Extract project
         run: |
           mkdir project
-          unzip -q *.zip -d project
+          unzip -q "$ZIP_FILE" -d project
           PROJECT_DIR=$(find project -name settings.gradle.kts -printf '%h\n' | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Android project not found"
+            exit 1
+          fi
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
       - name: Build APK
@@ -44,3 +58,4 @@ jobs:
         with:
           name: DailyQuoteWidget-APK
           path: dist/*.apk
+
